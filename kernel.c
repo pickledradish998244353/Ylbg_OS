@@ -1,10 +1,13 @@
-#include "printk.h"
 #include "vga.h"
-#define MY_INT_MAX  2147483647
-#define MY_INT_MIN  (-2147483647 - 1)
+#include "printk.h"
+#include "gdt.h"
 
 void kernel_main(void) {
     vga_init();
+
+    printk("=== Kernel Boot ===\n");
+    gdt_init();
+    printk("=== GDT Ready, Kernel Running! ===\n");
 
     while (1) {}
 }

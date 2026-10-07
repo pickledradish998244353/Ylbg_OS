@@ -15,7 +15,7 @@ static void itoa_unsigned(uint32_t num, int base, char *buf) {
         return;
     }
     while (num > 0) {
-        tmp[i++] = map[num % base];1
+        tmp[i++] = map[num % base];
         num /= base;
     }
     int k = 0;

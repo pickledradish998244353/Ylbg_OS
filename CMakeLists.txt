@@ -38,6 +38,9 @@ add_executable(kernel.bin
         io.h
         printk.h
         printk.c
+        gdt.h
+        gdt.c
+        gdt_flush.asm
 )
 
 # ==================== 【关键修改点 2：链接参数】 ====================
