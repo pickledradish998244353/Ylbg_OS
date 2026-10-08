@@ -9,7 +9,7 @@
 // 光标位置
 static size_t lx = 0;
 static size_t ly = 0;
-static uint8_t cur_col = 0;
+static uint8_t cur_col = 0x0F;
 
 // 将前景色和背景色打包成一个字节的属性
 static inline uint8_t vga_entry_color(vga_color_t fg, vga_color_t bg) {

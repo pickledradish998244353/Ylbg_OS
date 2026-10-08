@@ -18,18 +18,13 @@ set(CMAKE_ASM_NASM_OBJECT_FORMAT elf32)
 set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> -f elf32 <FLAGS> -o <OBJECT> <SOURCE>")
 
 # ==================== 【关键修改点 1：C 编译参数】 ====================
-# -m32                       : 生成 32 位代码
-# -ffreestanding -nostdlib   : 裸机独立运行环境，不依赖宿主机标准库
-# -fno-builtin               : 禁止编译器替换为内置库函数
-# -fno-stack-protector       : 禁用金丝雀栈保护（避免触发未定义的 __stack_chk_fail）
-# -fno-pic -fno-pie          : 彻底禁用位置无关代码（避免生成 GOT/PLT 表）
-# -mno-sse -mno-sse2         : 禁用 SSE 指令集（解决 printk 可变参数崩溃的真凶！）
-# -mno-mmx -mno-80387        : 禁用 MMX 和 x87 浮点指令
-# -mpreferred-stack-boundary=2 : 强制栈按 4 字节对齐（默认 16 字节对齐会触发 SSE 向量指令）
 set(CMAKE_C_FLAGS "-m32 -ffreestanding -nostdlib -fno-builtin -fno-stack-protector -fno-pic -fno-pie -mno-sse -mno-sse2 -mno-mmx -mno-80387 -mpreferred-stack-boundary=2 -Wall -Wextra")
 set(CMAKE_C_FLAGS_DEBUG "-g")
 set(CMAKE_C_FLAGS_RELEASE "-O2")
 
+# ==================== 【注意这里的顺序！】 ====================
+# kernel.bin 是生成的目标文件
+# boot.asm 是第一个源文件（包含 Multiboot Header）
 add_executable(kernel.bin
         boot.asm
         kernel.c
@@ -41,10 +36,12 @@ add_executable(kernel.bin
         gdt.h
         gdt.c
         gdt_flush.asm
+        idt.h
+        idt.c
+        idt_asm.asm
 )
 
 # ==================== 【关键修改点 2：链接参数】 ====================
-# 加上 -no-pie -static 保证生成纯粹的 32 位静态 ELF 内核
 set_target_properties(kernel.bin PROPERTIES
         LINK_FLAGS "-m32 -Wl,-melf_i386 -T ${CMAKE_SOURCE_DIR}/linker.ld -nostdlib -no-pie -static"
         SUFFIX ""
