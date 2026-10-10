@@ -20,7 +20,7 @@ typedef struct {
     uint32_t base;
 } __attribute__((packed)) idt_ptr_t;
 
-// 中断发生时，汇编 stub 会压入这个结构体
+// 中断发生时的寄存器状态
 typedef struct {
     uint32_t ds;                                     // 数据段
     uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // pusha 压入

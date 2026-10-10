@@ -26,10 +26,14 @@ global start
 extern kernel_main
 
 start:
-    cli                         ; 关中断
-    mov esp, stack_top          ; 【最关键的一行】：把栈指针 ESP 设置为栈顶！
+    cli
+    mov esp, stack_top
 
-    call kernel_main            ; 现在 C 语言函数可以安全地使用栈了！
+    ;按照 C 语言调用约定 (cdecl)，从右往左压栈参数
+    push ebx                    ; 第 2 个参数：multiboot_info 结构体指针 (里面包含内存地图 mmap_addr)
+    push eax                    ; 第 1 个参数：multiboot magic 标志 (0x2BADB002)
+
+    call kernel_main
 
 .loop:
     hlt

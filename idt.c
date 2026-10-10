@@ -147,29 +147,34 @@ static const char* exception_messages[] = {
     "Reserved","Reserved","Reserved","Reserved"
 };
 
-// ==================== C 层 ISR 总入口（异常） ====================
+// CPU产生异常
 void isr_handler(registers_t* regs) {
-    // 如果注册了自定义的处理函数（比如 3 号断点处理）
     if (interrupt_handlers[regs->int_no]) {
         interrupt_handlers[regs->int_no](regs);
         return;
     }
-
-    // 默认未捕获的 CPU 异常打印并停机
     if (regs->int_no < 32) {
         printk("[Exception] %s (int=%d, err=%d)\n",
                exception_messages[regs->int_no], regs->int_no, regs->err_code);
+
+        // 如果产生了缺页异常 读取并打印 CR2 寄存器信息
+        if (regs->int_no == 14) {
+            uint32_t faulting_address;
+            __asm__ volatile("mov %%cr2, %0" : "=r"(faulting_address));
+            printk("[Page Fault] Failed Attempt to Access Virtual Address: 0x%x\n", faulting_address);
+        }
+
         for (;;) __asm__ volatile("cli; hlt");
     }
 }
 
+// 中断请求
 void irq_handler(registers_t* regs) {
     // 向 PIC 发送 EOI（End of Interrupt）
     if (regs->int_no >= 40) {
         wb(0xA0, 0x20);   // 从片
     }
     wb(0x20, 0x20);       // 主片
-
     if (interrupt_handlers[regs->int_no]) {
         interrupt_handlers[regs->int_no](regs);
     }

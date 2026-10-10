@@ -39,6 +39,15 @@ add_executable(kernel.bin
         idt.h
         idt.c
         idt_asm.asm
+        timer.h
+        timer.c
+        keyboard.h
+        keyboard.c
+        multiboot.h
+        pmm.h
+        pmm.c
+        vmm.h
+        vmm.c
 )
 
 # ==================== 【关键修改点 2：链接参数】 ====================
