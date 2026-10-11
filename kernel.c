@@ -6,46 +6,46 @@
 #include "multiboot.h"
 #include "pmm.h"
 #include "vmm.h"
+#include "heap.h"
 
 void kernel_main(uint32_t magic, multiboot_info_t* mb_info) {
     gdt_init();
     idt_init();
-
     printk("System initializing...\n");
-
     if (magic == MULTIBOOT_BOOTLOADER_MAGIC) {
         pmm_init(mb_info);
     }
 
-    // 1. 初始化虚拟内存管理并开启分页！
     vmm_init();
+    heap_init();
 
-    // 2. 🎯【神奇测试】：虚拟地址映射测试！
-    // 申请一个真实的物理页
-    uint32_t phys_page = pmm_alloc_page();
+    // 2. 🎯【测试 1】：动态申请小内存 (比如 32 字节结构体/字符串)
+    char* str1 = (char*)kmalloc(32);
+    char* str2 = (char*)kmalloc(64);
 
-    // 选一个完全不相关的虚拟地址，比如 0x60000000 (1.5GB 处)
-    uint32_t virt_addr = 0x60000000;
+    printk("[Kmalloc Test] Allocated str1 (32B) at Virtual: 0x%x\n", str1);
+    printk("[Kmalloc Test] Allocated str2 (64B) at Virtual: 0x%x\n", str2);
 
-    // 用 map_page 把虚拟地址 0x60000000 强行映射到刚才分配的物理页上！
-    map_page(virt_addr, phys_page, VMM_PAGE_WRITABLE);
+    // 往动态分配的内存写入内容
+    str1[0] = 'O'; str1[1] = 'S'; str1[2] = '\0';
+    printk("[Kmalloc Test] Value in str1: %s\n", str1);
 
-    printk("[VMM Test] Mapped Virtual 0x%x ---> Physical 0x%x\n", virt_addr, phys_page);
+    // 3. 🎯【测试 2】：释放与合并测试
+    kfree(str1);
+    printk("[Kmalloc Test] Freed str1\n");
 
-    // 尝试往虚拟地址 0x60000000 写入数值
-    uint32_t* ptr = (uint32_t*)virt_addr;
-    *ptr = 0x88888888;
+    // 再次申请 16 字节，看是否能重用刚才释放的 str1 的内存块！
+    char* str3 = (char*)kmalloc(16);
+    printk("[Kmalloc Test] Allocated str3 (16B) at Virtual: 0x%x\n", str3);
 
-    // 从真实的物理地址读取出来验证！
-    uint32_t* phys_ptr = (uint32_t*)phys_page;
-
-    if (*phys_ptr == 0x88888888) {
-        printk("[PASS] Paging Magic Success! Value at Phys 0x%x is 0x%x\n", phys_page, *phys_ptr);
-    } else {
-        printk("[FAIL] Paging Mapping Failed!\n");
+    if (str3 == str1) {
+        printk("[PASS] Kmalloc & Kfree heap memory reuse success!\n");
+    }
+    else {
+        printk("[FAIL] Heap memory reuse failed.\n");
     }
 
-    // 启动定时器与键盘
+    // 启动中断
     timer_init(100);
     keyboard_init();
     __asm__ volatile("sti");

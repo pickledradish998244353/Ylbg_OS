@@ -48,6 +48,8 @@ add_executable(kernel.bin
         pmm.c
         vmm.h
         vmm.c
+        heap.h
+        heap.c
 )
 
 # ==================== 【关键修改点 2：链接参数】 ====================
