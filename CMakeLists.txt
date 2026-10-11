@@ -50,6 +50,9 @@ add_executable(kernel.bin
         vmm.c
         heap.h
         heap.c
+        task.h
+        task.c
+        task.asm
 )
 
 # ==================== 【关键修改点 2：链接参数】 ====================
